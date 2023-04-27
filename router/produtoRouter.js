@@ -79,4 +79,60 @@ router.post('/?', function(req, res, next) {
   }
 });
 
+router.put('/?', function(req, res, next) {
+  let resposta = new respostaClass();
+
+  //verifica se recebeu uma imagem
+  if(req.body.dados_imagem != null){
+    //salvar imagem
+    let bitmap = new Buffer.from(req.body.dados_imagem.imagem_base64, 'base64');
+    let dataAtual = new Date();
+    dataAtual = dataAtual.toLocaleString().replace(/\//g, '').replace(/-/g, '').replace(/:/g, '').replace(/ /g, '');
+    let nomeImagemCaminho = pastaPublica + dataAtual + req.body.dados_imagem.nome_arquivo;
+    fs.writeFileSync(nomeImagemCaminho, bitmap);
+    req.body.caminho_imagem = nomeImagemCaminho;
+  }
+
+  produtoModel.update(req.body, function(erro, retorno){
+    if(erro){
+      resposta.erro = true;
+      resposta.msg = 'Não foi possível alterar os dados, consulte o administrador do sistema!';
+      console.log('Erro', erro);
+    }else{
+      if(retorno.affectedRows){
+        resposta.msg = 'Produto alterado com sucesso!';
+      }else{
+        resposta.erro = true;
+        resposta.msg = 'Não foi alterar o produto!';
+        console.log('Erro', erro);
+      }
+    }
+    // resposta.dados = retorno;
+
+    res.json(resposta);
+  });
+});
+
+router.delete('/:id?', function(req, res, next) {
+  let resposta = new respostaClass();
+
+  produtoModel.delete(req.params.id, function(erro, retorno){
+    if(erro){
+      resposta.erro = true;
+      resposta.msg = 'Não foi possível deletar os dados, consulte o administrador do sistema!';
+      console.log('Erro', erro);
+    }else{
+      if(retorno.affectedRows){
+        resposta.msg = 'Produto excluído com sucesso!';
+      }else{
+        resposta.erro = true;
+        resposta.msg = 'Não foi excluir o produto!';
+        console.log('Erro', erro);
+      }
+    }
+
+    res.json(resposta);
+  });
+});
+
 module.exports = router;
